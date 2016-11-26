@@ -18,18 +18,17 @@ using namespace std;
 int _tmain(int argc, _TCHAR* argv[])
 {
     getchar();
-    for (int i = 0;i<100;i ++)
-    {
-        char *szBuffer = new char[100];
 
-        delete szBuffer;
-        szBuffer = NULL;
+    char *szBuffer = new char[100];
 
-        int n = strlen(szBuffer);
+    delete szBuffer;
+    szBuffer = NULL;
 
-        char *szBuffer1 = new char[n+100];
-        delete szBuffer1;
-    }
+    int n = strlen(szBuffer);
+
+    char *szBuffer1 = new char[n+100];
+    delete szBuffer1;
+    
     getchar();
 	return 0;
 }
