@@ -15,7 +15,6 @@ using namespace std;
 
 #include "Logminidump.h"
 
-
 int _tmain(int argc, _TCHAR* argv[])
 {
     getchar();
