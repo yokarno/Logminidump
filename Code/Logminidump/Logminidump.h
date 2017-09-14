@@ -92,27 +92,32 @@ LONG __stdcall MyUnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+LPTOP_LEVEL_EXCEPTION_FILTER WINAPI MyDummySetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
+{
+    return NULL;
+}
+
 // 此函数一旦成功调用，之后对 SetUnhandledExceptionFilter 的调用将无效
 void DisableSetUnhandledExceptionFilter()
 {
     void *addr = (void *)GetProcAddress(LoadLibrary("kernel32.dll"),
                                         "SetUnhandledExceptionFilter");
 
-    if (addr)
-    {
-        unsigned char code[16];
-        int size = 0;
+    if (addr) {
+        unsigned char newJump[100];
+        DWORD dwOrgEntryAddr = (DWORD)addr;
+        dwOrgEntryAddr += 5; // add 5 for 5 op-codes for jmp far
 
-        code[size++] = 0x33;
-        code[size++] = 0xC0;
-        code[size++] = 0xC2;
-        code[size++] = 0x04;
-        code[size++] = 0x00;
 
-        DWORD dwOldFlag, dwTempFlag;
-        VirtualProtect(addr, size, PAGE_READWRITE, &dwOldFlag);
-        WriteProcessMemory(GetCurrentProcess(), addr, code, size, NULL);
-        VirtualProtect(addr, size, dwOldFlag, &dwTempFlag);
+        void *pNewFunc = &MyDummySetUnhandledExceptionFilter;
+        DWORD dwNewEntryAddr = (DWORD)pNewFunc;
+        DWORD dwRelativeAddr = dwNewEntryAddr - dwOrgEntryAddr;
+
+
+        newJump[0] = 0xE9;  // JMP absolute
+        memcpy(&newJump[1], &dwRelativeAddr, sizeof(pNewFunc));
+        SIZE_T bytesWritten;
+        BOOL bRet = WriteProcessMemory(GetCurrentProcess(), addr, newJump, sizeof(pNewFunc) + 1, &bytesWritten);
     }
 }
 
